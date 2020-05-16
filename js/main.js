@@ -286,8 +286,8 @@ function init() {
     data.forEach(createCardRestaurant);
   });
 
-  cartButton.addEventListener("click", renderCart());
-  cartButton.addEventListener("click", toggleModal());
+  cartButton.addEventListener("click", renderCart);
+  cartButton.addEventListener("click", toggleModal);
   modalBody.addEventListener("click", changeCount);
   close.addEventListener("click", toggleModal);
   cardsRestaurants.addEventListener("click", openGoods);
