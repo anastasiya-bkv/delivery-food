@@ -305,67 +305,70 @@ function init() {
   });
 
   inputSearch.addEventListener("keydown", function (event) {
-    const goods = [];
-
     const value = event.target.value.toLowerCase().trim();
-    if (event.keyCode === 13) {
-      if (login) {
-        if (!value || value.length < 3) {
-          event.target.style.border = "1px solid red";
-          event.target.value = "";
-          setTimeout(function () {
-            event.target.style.border = "";
-          }, 2000);
-          return;
-        }
-        getData("./db/partners.json").then(function (data) {
-          const products = data.map(function (item) {
-            return item.products;
-          });
-          products.forEach(function (product) {
-            getData(`./db/${product}`)
-              .then(function (data) {
-                goods.push(...data);
-                return goods;
-              })
-              .then(function (goods) {
-                const searchGoods = goods.filter(function (good) {
-                  return (
-                    good.name.toLowerCase().includes(value) ||
-                    good.description.toLowerCase().includes(value)
-                  );
-                });
-                cardsMenu.textContent = "";
-                containerPromo.classList.add("hide");
-                restaurants.classList.add("hide");
-                menu.classList.remove("hide");
-                event.target.value = "";
-                const restaurant = {
-                  name: "Результаты поиска",
-                  stars: "",
-                  price: "",
-                  kitchen: "",
-                };
-                if (searchGoods.length < 1) {
-                  restaurant.name = "По вашему запросу ничего не найдено";
-                } else {
-                  searchGoods.forEach(createCardGood);
-                }
-                const menuSectionHeading = document.querySelector(
-                  ".menu .section-heading"
-                );
 
-                if (menuSectionHeading) {
-                  menu.removeChild(menuSectionHeading);
-                }
-                createRestaurantHeading(restaurant);
-              });
-          });
-        });
-      } else {
-        toggleModalAuth();
-      }
+    if (event.keyCode !== 13) {
+      return;
     }
+
+    if (!login) {
+      toggleModalAuth();
+      return;
+    }
+
+    if (!value || value.length < 3) {
+      event.target.style.border = "1px solid red";
+      event.target.value = "";
+      setTimeout(function () {
+        event.target.style.border = "";
+      }, 2000);
+      return;
+    }
+
+    getData("./db/partners.json")
+      .then(function (data) {
+        const products = data.map(function (item) {
+          return item.products;
+        });
+        return Promise.all(
+          products.map(function (product) {
+            return getData(`./db/${product}`);
+          })
+        );
+      })
+      .then((partnersProducts) => {
+        const goods = partnersProducts.flat();
+        const searchGoods = goods.filter(function (good) {
+          return (
+            good.name.toLowerCase().includes(value) ||
+            good.description.toLowerCase().includes(value)
+          );
+        });
+        cardsMenu.textContent = "";
+        containerPromo.classList.add("hide");
+        restaurants.classList.add("hide");
+        menu.classList.remove("hide");
+        event.target.value = "";
+        const restaurant = {
+          name: "Результаты поиска",
+          stars: "",
+          price: "",
+          kitchen: "",
+        };
+        if (searchGoods.length < 1) {
+          restaurant.name = "По вашему запросу ничего не найдено";
+        } else {
+          searchGoods.forEach(createCardGood);
+        }
+        const menuSectionHeading = document.querySelector(
+          ".menu .section-heading"
+        );
+
+        if (menuSectionHeading) {
+          menu.removeChild(menuSectionHeading);
+        }
+        createRestaurantHeading(restaurant);
+      });
   });
 
   checkAuth();
